@@ -9,7 +9,7 @@ defineProps({
 
 <template>
   <li>
-    <a href="#" class="post-item">
+    <router-link :to="`/post/${post.slug}`" class="post-item">
       <time class="post-date">{{ post.date }}</time>
       <h3 class="post-title">{{ post.title }}</h3>
       <p class="post-excerpt">{{ post.excerpt }}</p>
@@ -19,7 +19,7 @@ defineProps({
         </span>
         <span class="read-time">约 {{ post.readTime }} 分钟</span>
       </div>
-    </a>
+    </router-link>
   </li>
 </template>
 

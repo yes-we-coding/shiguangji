@@ -1,9 +1,9 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { posts } from '../data/posts'
+import { activeTag } from '../stores/postFilter'
 import PostItem from './PostItem.vue'
 
-const activeTag = ref('全部')
 const keyword = ref('')
 
 const tags = computed(() => ['全部', ...new Set(posts.flatMap((p) => p.tags))])
@@ -65,7 +65,13 @@ const filteredPosts = computed(() => {
     </div>
 
     <TransitionGroup name="list" tag="ul" class="post-list">
-      <PostItem v-for="post in filteredPosts" :key="post.id" :post="post" />
+      <PostItem
+        v-for="(post, i) in filteredPosts"
+        :key="post.id"
+        v-reveal
+        :post="post"
+        :style="{ '--delay': `${Math.min(i, 6) * 0.06}s` }"
+      />
       <li v-if="filteredPosts.length === 0" key="empty" class="no-result">
         没有找到相关文章，换个关键词试试
       </li>
