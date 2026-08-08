@@ -10,7 +10,15 @@ defineProps({
 <template>
   <li>
     <router-link :to="`/post/${post.slug}`" class="post-item">
-      <time class="post-date">{{ post.date }}</time>
+      <div class="post-head">
+        <span v-if="post.pinned" class="pin-badge" title="置顶文章">
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2z" />
+          </svg>
+          置顶
+        </span>
+        <time class="post-date">{{ post.date }}</time>
+      </div>
       <h3 class="post-title">{{ post.title }}</h3>
       <p class="post-excerpt">{{ post.excerpt }}</p>
       <div class="post-meta">
@@ -36,6 +44,23 @@ defineProps({
 .post-item:hover {
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.post-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  font-size: 11px;
+  color: var(--accent-deep);
+  background: var(--accent-soft);
+  border-radius: 999px;
 }
 
 .post-date {

@@ -24,8 +24,7 @@
           <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
           <!-- TODO: 替换为真实邮箱 -->
           <a href="mailto:hi@example.com">邮箱</a>
-          <!-- 暂未提供 RSS 订阅；准备好后取消注释并指向 /rss.xml -->
-          <!-- <a href="/rss.xml">RSS</a> -->
+          <a href="/shiguangji/rss.xml">RSS</a>
         </div>
       </div>
     </div>

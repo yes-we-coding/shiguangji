@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onUnmounted, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { marked } from 'marked'
 import { posts, getPost } from '../data/posts'
@@ -8,6 +8,7 @@ import { resetMeta, updateMeta } from '../utils/seo'
 marked.setOptions({ gfm: true, breaks: false })
 
 const route = useRoute()
+const articleEl = ref(null)
 
 const post = computed(() => getPost(route.params.slug))
 
@@ -35,6 +36,45 @@ watch(
   { immediate: true },
 )
 
+// Markdown 渲染后，给所有 <pre> 块加复制按钮
+watch(
+  html,
+  () => {
+    nextTick(() => enhanceCodeBlocks())
+  },
+  { immediate: true, flush: 'post' },
+)
+
+function enhanceCodeBlocks() {
+  if (!articleEl.value) return
+  const blocks = articleEl.value.querySelectorAll('.markdown-body pre')
+  blocks.forEach((pre) => {
+    if (pre.querySelector('.copy-btn')) return
+    pre.style.position = 'relative'
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'copy-btn'
+    btn.setAttribute('aria-label', '复制代码')
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>复制</span>`
+    btn.addEventListener('click', async () => {
+      const code = pre.querySelector('code')?.innerText || pre.innerText
+      try {
+        await navigator.clipboard.writeText(code)
+        btn.classList.add('copied')
+        btn.querySelector('span').textContent = '已复制'
+      } catch {
+        btn.classList.add('error')
+        btn.querySelector('span').textContent = '失败'
+      }
+      setTimeout(() => {
+        btn.classList.remove('copied', 'error')
+        btn.querySelector('span').textContent = '复制'
+      }, 1800)
+    })
+    pre.appendChild(btn)
+  })
+}
+
 // 离开文章页，恢复默认 meta
 onUnmounted(resetMeta)
 </script>
@@ -42,7 +82,7 @@ onUnmounted(resetMeta)
 <template>
   <div class="container post-page">
     <template v-if="post">
-      <article>
+      <article ref="articleEl">
         <header class="post-head">
           <h1 class="post-title">{{ post.title }}</h1>
           <div class="post-meta">
@@ -185,12 +225,59 @@ onUnmounted(resetMeta)
 }
 
 .markdown-body :deep(pre) {
+  position: relative;
   margin: 0 0 16px;
   padding: 16px 18px;
   overflow-x: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+}
+
+.markdown-body :deep(.copy-btn) {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 9px;
+  font-size: 11.5px;
+  font-family: inherit;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  opacity: 0;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    color 0.2s,
+    border-color 0.2s,
+    background-color 0.2s;
+}
+
+.markdown-body :deep(pre:hover .copy-btn),
+.markdown-body :deep(.copy-btn:focus-visible) {
+  opacity: 1;
+}
+
+.markdown-body :deep(.copy-btn:hover) {
+  color: var(--accent-deep);
+  border-color: var(--accent);
+}
+
+.markdown-body :deep(.copy-btn.copied) {
+  color: var(--accent-deep);
+  background: var(--accent-soft);
+  border-color: transparent;
+  opacity: 1;
+}
+
+.markdown-body :deep(.copy-btn.error) {
+  color: #c0665c;
+  border-color: #c0665c;
+  opacity: 1;
 }
 
 .markdown-body :deep(pre code) {

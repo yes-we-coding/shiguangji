@@ -4,3 +4,6 @@ dev.log
 *.local
 .DS_Store
 Thumbs.db
+
+# 生成文件（构建时由 scripts/build-rss.mjs 产出）
+public/rss.xml
