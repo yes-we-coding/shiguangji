@@ -23,6 +23,9 @@ function parsePost(raw) {
         .map((s) => s.trim())
         .filter(Boolean)
     }
+    // 布尔字段：pinned / draft
+    if (value === 'true') value = true
+    else if (value === 'false') value = false
     data[m[1]] = value
   }
   return { data, content: match[2].trim() }
@@ -43,11 +46,16 @@ export const posts = Object.entries(files)
       date: data.date || '',
       excerpt: data.excerpt || '',
       tags: Array.isArray(data.tags) ? data.tags : [],
+      pinned: data.pinned === true,
       words,
       readTime: Math.max(1, Math.round(words / 400)),
       content,
     }
   })
-  .sort((a, b) => b.date.localeCompare(a.date))
+  // 排序：pinned 排前 → 然后按日期倒序 → 同日期保持原顺序（稳定排序）
+  .sort((a, b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+    return b.date.localeCompare(a.date)
+  })
 
 export const getPost = (slug) => posts.find((p) => p.slug === slug)

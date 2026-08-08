@@ -3,6 +3,7 @@ title: 一周 GitHub 热点：AI Agent 进入"技能化"时代
 date: 2026-08-08
 excerpt: 这一周 GitHub Trending 上 AI 主题压倒性占主导，并且出现了一个有趣的现象："Skills" 成了一个独立的产品类别。从给 agent 一台电脑，到把一本书变成技能——AI Agent 生态正在从"模型驱动"走向"技能驱动"。
 tags: [AI, 前端, 周报]
+pinned: true
 ---
 
 每个周末翻一遍 GitHub Trending 是我的习惯——不是为了追新，而是想看生态在朝哪个方向走。
