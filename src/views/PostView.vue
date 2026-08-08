@@ -1,8 +1,9 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { marked } from 'marked'
 import { posts, getPost } from '../data/posts'
+import { resetMeta, updateMeta } from '../utils/seo'
 
 marked.setOptions({ gfm: true, breaks: false })
 
@@ -17,6 +18,25 @@ const prevPost = computed(() => (index.value > 0 ? posts[index.value - 1] : null
 const nextPost = computed(() =>
   index.value >= 0 && index.value < posts.length - 1 ? posts[index.value + 1] : null,
 )
+
+// 文章页专属 meta：标题、描述、og:* 都换成当前文章
+watch(
+  () => post.value,
+  (val) => {
+    if (!val) return
+    document.title = `${val.title} · 拾光集`
+    updateMeta({
+      description: val.excerpt,
+      'og:title': val.title,
+      'og:description': val.excerpt,
+      'og:type': 'article',
+    })
+  },
+  { immediate: true },
+)
+
+// 离开文章页，恢复默认 meta
+onUnmounted(resetMeta)
 </script>
 
 <template>

@@ -57,7 +57,9 @@ function removeTodo(id) {
       >
         <button
           class="check"
-          :aria-label="todo.done ? '标记为未完成' : '标记为完成'"
+          role="checkbox"
+          :aria-checked="todo.done"
+          :aria-label="`${todo.text}，${todo.done ? '已完成' : '未完成'}，点击切换`"
           @click="todo.done = !todo.done"
         >
           <svg

@@ -20,9 +20,12 @@
       <div class="about-section">
         <h2 class="section-title">找到我</h2>
         <div class="contact-links">
+          <!-- TODO: 替换为真实 GitHub 地址 -->
           <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+          <!-- TODO: 替换为真实邮箱 -->
           <a href="mailto:hi@example.com">邮箱</a>
-          <a href="#">RSS</a>
+          <!-- 暂未提供 RSS 订阅；准备好后取消注释并指向 /rss.xml -->
+          <!-- <a href="/rss.xml">RSS</a> -->
         </div>
       </div>
     </div>

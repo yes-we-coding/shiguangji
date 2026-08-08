@@ -49,6 +49,7 @@ const filteredPosts = computed(() => {
         v-model="keyword"
         type="search"
         placeholder="搜索文章标题、摘要或标签..."
+        aria-label="搜索文章"
       />
     </div>
 
