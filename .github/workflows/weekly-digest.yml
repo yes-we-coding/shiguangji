@@ -1,0 +1,68 @@
+name: Weekly Digest
+
+on:
+  # 每周六北京时间下午 5 点（UTC 09:00）跑
+  schedule:
+    - cron: '0 9 * * 6'
+  # 也支持手动触发
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '可选：自定义日期 YYYY-MM-DD'
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate digest draft
+        run: |
+          if [ -n "${{ inputs.date }}" ]; then
+            node scripts/build-weekly-digest.mjs --date=${{ inputs.date }}
+          else
+            node scripts/build-weekly-digest.mjs
+          fi
+
+      - name: Check if draft was generated
+        id: check
+        run: |
+          DRAFT=$(ls drafts/digest-*.md 2>/dev/null | head -1)
+          if [ -z "$DRAFT" ]; then
+            echo "has_draft=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_draft=true" >> "$GITHUB_OUTPUT"
+            echo "draft_path=$DRAFT" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open PR with digest draft
+        if: steps.check.outputs.has_draft == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: digest-draft
+          delete-branch: false
+          title: '📰 Weekly digest draft'
+          body: |
+            自动生成的技术周报草稿，请审阅后合并。
+
+            **审阅 checklist**:
+            - [ ] 挑选 3-5 条 HN 评论
+            - [ ] 展开 5-7 个 Trending 仓库
+            - [ ] npm 数据对比上周
+            - [ ] 框架新版本挑有重大变更的深入
+            - [ ] 删除底部编辑提示块
+            - [ ] 标题改为更吸引人的版本
+            - [ ] 把文件移到 `src/posts/` 而不是 `drafts/`
+          commit-message: 'digest: auto-generated weekly digest'
+          add-paths: |
+            drafts/

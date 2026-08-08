@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/build-rss.mjs && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "digest": "node scripts/build-weekly-digest.mjs"
   },
   "dependencies": {
     "marked": "^18.0.7",
