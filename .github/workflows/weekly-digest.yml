@@ -53,16 +53,17 @@ jobs:
           delete-branch: false
           title: '📰 Weekly digest draft'
           body: |
-            自动生成的技术周报草稿，请审阅后合并。
+            自动生成的技术周报草稿，请审阅后合并 → 自动上线到博客。
 
             **审阅 checklist**:
             - [ ] 挑选 3-5 条 HN 评论
             - [ ] 展开 5-7 个 Trending 仓库
             - [ ] npm 数据对比上周
             - [ ] 框架新版本挑有重大变更的深入
-            - [ ] 删除底部编辑提示块
+            - [ ] 删除底部编辑提示块（否则构建会失败 🚫）
             - [ ] 标题改为更吸引人的版本
-            - [ ] 把文件移到 `src/posts/` 而不是 `drafts/`
+
+            合并后 `npm run build` 会通过 → 自动部署到 Pages。
           commit-message: 'digest: auto-generated weekly digest'
           add-paths: |
-            drafts/
+            src/posts/

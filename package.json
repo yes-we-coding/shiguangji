@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/check-posts.mjs",
     "build": "node scripts/build-rss.mjs && vite build",
     "preview": "vite preview",
-    "digest": "node scripts/build-weekly-digest.mjs"
+    "digest": "node scripts/build-weekly-digest.mjs",
+    "postbuild": "node scripts/check-posts.mjs"
   },
   "dependencies": {
     "marked": "^18.0.7",

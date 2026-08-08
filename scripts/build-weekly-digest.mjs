@@ -1,6 +1,6 @@
 // 自动生成技术周报草稿
 // 用法：node scripts/build-weekly-digest.mjs [--date=YYYY-MM-DD]
-// 输出：drafts/digest-YYYY-MM-DD.md
+// 输出：src/posts/digest-YYYY-MM-DD.md（直接进文章目录，审阅 PR 后合并即上线）
 
 import { mkdirSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
@@ -240,8 +240,8 @@ async function main() {
     hn, trendingAll, trendingTs, npmStats, releases,
   })
 
-  // 写入 drafts/
-  const outDir = 'drafts'
+  // 写入 src/posts/（直接进文章目录，审阅 PR 后合并即上线）
+  const outDir = 'src/posts'
   if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true })
   const outPath = join(outDir, `digest-${TODAY}.md`)
   writeFileSync(outPath, md)
