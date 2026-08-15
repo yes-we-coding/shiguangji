@@ -19,21 +19,40 @@ const SITE_NAME = '拾光集'
 
 // ---- 工具函数 ----
 const fmt = (n) => n.toLocaleString('en-US')
+const DEFAULT_TIMEOUT_MS = 15000
+// 给 fetch 加超时：避免某个源（例如 github.com/trending HTML 在受限网络下
+// TCP 包被丢弃又不返 RST）卡到内核 TCP 超时，导致整个脚本挂死。
 const fetchJSON = async (url, opts = {}) => {
-  const res = await fetch(url, {
-    ...opts,
-    headers: { 'User-Agent': 'shiguangji-digest/1.0', ...(opts.headers || {}) },
-  })
-  if (!res.ok) throw new Error(`${url} → HTTP ${res.status}`)
-  return res.json()
+  const controller = new AbortController()
+  const ms = opts.timeout ?? DEFAULT_TIMEOUT_MS
+  const timer = setTimeout(() => controller.abort(), ms)
+  try {
+    const res = await fetch(url, {
+      ...opts,
+      signal: controller.signal,
+      headers: { 'User-Agent': 'shiguangji-digest/1.0', ...(opts.headers || {}) },
+    })
+    if (!res.ok) throw new Error(`${url} → HTTP ${res.status}`)
+    return res.json()
+  } finally {
+    clearTimeout(timer)
+  }
 }
 const fetchText = async (url, opts = {}) => {
-  const res = await fetch(url, {
-    ...opts,
-    headers: { 'User-Agent': 'shiguangji-digest/1.0', ...(opts.headers || {}) },
-  })
-  if (!res.ok) throw new Error(`${url} → HTTP ${res.status}`)
-  return res.text()
+  const controller = new AbortController()
+  const ms = opts.timeout ?? DEFAULT_TIMEOUT_MS
+  const timer = setTimeout(() => controller.abort(), ms)
+  try {
+    const res = await fetch(url, {
+      ...opts,
+      signal: controller.signal,
+      headers: { 'User-Agent': 'shiguangji-digest/1.0', ...(opts.headers || {}) },
+    })
+    if (!res.ok) throw new Error(`${url} → HTTP ${res.status}`)
+    return res.text()
+  } finally {
+    clearTimeout(timer)
+  }
 }
 const safeRun = async (name, fn) => {
   try {
@@ -58,6 +77,9 @@ async function fetchHackerNews(limit = 8) {
 }
 
 // ---- 2. GitHub Trending ----
+// 优先解析 github.com/trending 的 HTML；抓不到 / 解析为空时回退到
+// GitHub Search API（按 "最近活跃 + 高星" 近似 trending，因为 Search API
+// 不直接暴露 "stars this week"）。
 function parseTrending(html) {
   const rows = html.match(/<article class="Box-row">[\s\S]*?<\/article>/g) || []
   return rows.map(row => {
@@ -75,12 +97,41 @@ function parseTrending(html) {
   }).filter(Boolean)
 }
 
-async function fetchTrending(category, limit = 10) {
+async function fetchTrendingHTML(category, limit) {
   const url = category === 'all'
     ? 'https://github.com/trending?since=weekly'
     : `https://github.com/trending/${category}?since=weekly`
   const html = await fetchText(url)
   return parseTrending(html).slice(0, limit)
+}
+
+async function fetchTrendingAPI(category, limit) {
+  // "最近 7 天活跃 + 一定星数" → trending 的近似。
+  // all 阈值放宽到 200 ★（否则全是 all-time 巨佬），按语言筛选时收紧到 50 ★。
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const langClause = category === 'all' ? '' : `+language:${category.toLowerCase()}`
+  const minStars = category === 'all' ? 200 : 50
+  const url = `https://api.github.com/search/repositories?q=stars:%3E${minStars}+pushed:%3E${since}${langClause}&sort=stars&order=desc&per_page=${limit}`
+  const data = await fetchJSON(url, {
+    headers: { 'Accept': 'application/vnd.github+json' },
+  })
+  return (data.items || []).map(r => ({
+    path: '/' + r.full_name,
+    lang: r.language || '',
+    desc: r.description || '',
+    stars: r.stargazers_count,
+  }))
+}
+
+async function fetchTrending(category, limit = 10) {
+  try {
+    const html = await fetchTrendingHTML(category, limit)
+    if (html.length > 0) return html
+    throw new Error('HTML 解析为空')
+  } catch (e) {
+    console.warn(`⚠ Trending HTML 抓取失败（${category}）：${e.message}，回退 Search API`)
+    return fetchTrendingAPI(category, limit)
+  }
 }
 
 // ---- 3. npm 下载量 ----
@@ -94,19 +145,34 @@ async function fetchNpmDownloads(packages) {
 }
 
 // ---- 4. 主流框架最新版 ----
+// 从 npm registry 拉最新 dist-tag + 发布时间。
+// 比 GitHub `/releases/latest` 稳：避免 monorepo 里某个子包恰好最近发版
+// 就把整个 repo 的 latest 抢走（比如 Vite 的 plugin-legacy、Astro 的 @astrojs/node）。
 const FRAMEWORKS = [
-  { name: 'Vue', repo: 'vuejs/core' },
-  { name: 'React', repo: 'facebook/react' },
-  { name: 'Svelte', repo: 'sveltejs/svelte' },
-  { name: 'Vite', repo: 'vitejs/vite' },
-  { name: 'TypeScript', repo: 'microsoft/TypeScript' },
-  { name: 'Astro', repo: 'withastro/astro' },
+  { name: 'Vue', npm: 'vue' },
+  { name: 'React', npm: 'react' },
+  { name: 'Svelte', npm: 'svelte' },
+  { name: 'Vite', npm: 'vite' },
+  { name: 'TypeScript', npm: 'typescript' },
+  { name: 'Astro', npm: 'astro' },
 ]
 async function fetchFrameworkReleases() {
   return Promise.all(
-    FRAMEWORKS.map(async ({ name, repo }) => {
-      const r = await fetchJSON(`https://api.github.com/repos/${repo}/releases/latest`).catch(() => null)
-      return r ? { name, tag: r.tag_name, date: r.published_at, url: r.html_url } : { name, error: true }
+    FRAMEWORKS.map(async ({ name, npm }) => {
+      try {
+        // 一次请求拿到 version + time
+        const data = await fetchJSON(`https://registry.npmjs.org/${npm}`)
+        const tag = data['dist-tags']?.latest
+        const date = tag ? data.time?.[tag] : null
+        return {
+          name,
+          tag,
+          date,
+          url: `https://www.npmjs.com/package/${npm}`,
+        }
+      } catch {
+        return { name, error: true }
+      }
     }),
   )
 }
