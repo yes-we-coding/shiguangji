@@ -1,15 +1,15 @@
-/* ————— 配色：暖纸白 + 鼠尾草绿（低饱和、护眼） ————— */
+/* ————— 配色：冷雾灰 + 青绿（清爽、低饱和、护眼） ————— */
 :root {
-  --bg: #faf9f7;
+  --bg: #f6f8fa;
   --surface: #ffffff;
-  --text: #33302b;
-  --text-muted: #6f6a62;
-  --accent: #7c9a82;
-  --accent-deep: #5f7d66;
-  --accent-soft: rgba(124, 154, 130, 0.12);
-  --border: #eae7e1;
-  --shadow: 0 6px 20px rgba(66, 60, 50, 0.07);
-  --glow: rgba(124, 154, 130, 0.14);
+  --text: #1f2328;
+  --text-muted: #6e7681;
+  --accent: #2e7d7d;
+  --accent-deep: #1f5e5e;
+  --accent-soft: rgba(46, 125, 125, 0.12);
+  --border: #d8dee4;
+  --shadow: 0 6px 20px rgba(31, 35, 40, 0.07);
+  --glow: rgba(46, 125, 125, 0.14);
 
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -24,18 +24,18 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ————— 深色主题：暖黑 + 浅绿 ————— */
+/* ————— 深色主题：冷黑 + 浅青 ————— */
 [data-theme='dark'] {
-  --bg: #1c1b19;
-  --surface: #262422;
-  --text: #e6e3dd;
-  --text-muted: #9b968d;
-  --accent: #9db8a2;
-  --accent-deep: #b9d2bd;
-  --accent-soft: rgba(157, 184, 162, 0.14);
-  --border: #35322e;
-  --shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-  --glow: rgba(157, 184, 162, 0.08);
+  --bg: #0d1117;
+  --surface: #161b22;
+  --text: #c9d1d9;
+  --text-muted: #8b949e;
+  --accent: #5eb5b5;
+  --accent-deep: #7dcccc;
+  --accent-soft: rgba(94, 181, 181, 0.14);
+  --border: #30363d;
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --glow: rgba(94, 181, 181, 0.1);
 }
 
 * {
